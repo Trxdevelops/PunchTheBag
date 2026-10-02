@@ -1,40 +1,99 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Punch The Bag - Write & Fight</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
-  </head>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write &amp; Fight</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+</head>
 
-  <body>
-    <h1 class="titulo-tinta">Write & Fight</h1>
+<body>
 
-    <div class="container">
-      <div class="game-area">
-        <div class="enemy-container">
-          <div class="enemy-health">
-            <div class="health-bar" id="enemy-health-bar"></div>
-          </div>
-          <div class="enemy-timer">
-            <img id="enemy-img" src="enemy.png" alt="Enemigo">
-          </div>
+  <h1>Write &amp; Fight</h1>
+
+  <main>
+
+    <section class="panel">
+      <div class="contenido">
+        <h2>Cómo se juega</h2>
+        <ol class="reglas">
+          <li>Escribe la palabra que aparece antes de que se acabe la barra de tiempo.</li>
+          <li>Si aciertas, el boss pierde vida.</li>
+          <li>Si fallas o se acaba el tiempo, el boss te ataca y pierdes vida tú.</li>
+          <li>Cuando el boss muere subes de ronda: las palabras son más largas, hay menos tiempo y los golpes duelen más.</li>
+          <li>La partida acaba cuando tu vida llega a 0.</li>
+        </ol>
+        <p class="nota">No hace falta poner las tildes.</p>
+      </div>
+    </section>
+
+    <section class="panel juego">
+
+      <div class="bloque">
+        <div class="marcador">
+          <span>Puntos: <b id="puntos">0</b></span>
+          <span>Ronda: <b id="ronda">1</b></span>
         </div>
-        
-        <div class="player-health">
-          <div class="health-bar" id="player-health-bar"></div>
+        <h2 id="nombre-boss">Glass Joe</h2>
+        <div class="barra"><div class="relleno bien" id="vida-boss"></div></div>
+      </div>
+
+      <div id="sprite"></div>
+
+      <div class="bloque">
+        <p id="aviso"></p>
+
+        <div id="zona-inicio" class="zona">
+          <p>Lee las reglas de la izquierda y dale cuando quieras.</p>
+          <button id="btn-empezar">Empezar</button>
         </div>
-        
-        <div class="word-section">
-          <div id="word-display">PALABRA</div>
-          <input type="text" id="word-input" placeholder="Escribe...">
+
+        <div id="zona-juego" class="zona oculto">
+          <div class="barra tiempo"><div class="relleno" id="barra-tiempo"></div></div>
+          <p id="palabra">palabra</p>
+          <input type="text" id="entrada" placeholder="Escribe aquí..." autocomplete="off">
+        </div>
+
+        <div id="zona-derrota" class="zona oculto">
+          <h3>Has perdido</h3>
+          <p id="es-record"></p>
+          <ul class="resumen">
+            <li>Rondas: <b id="fin-ronda">0</b></li>
+            <li>Palabras acertadas: <b id="fin-palabras">0</b></li>
+            <li>Precisión: <b id="fin-precision">0</b>%</li>
+            <li>Tiempo: <b id="fin-tiempo">0</b>s</li>
+            <li class="total">Puntuación: <b id="fin-puntos">0</b></li>
+          </ul>
+          <button id="btn-reiniciar">Jugar otra vez</button>
         </div>
       </div>
 
-      <div class="leaderboard"></div>
-    </div>
-  </body>
+      <div class="bloque">
+        <p class="etiqueta">Tu vida</p>
+        <div class="barra"><div class="relleno bien" id="vida-jugador"></div></div>
+      </div>
+
+    </section>
+
+    <section class="panel">
+      <div class="contenido">
+        <h2>Mejor resultado</h2>
+
+        <p class="nota" id="sin-record">Todavía no has terminado ninguna partida.</p>
+
+        <ul class="resumen oculto" id="mejor">
+          <li class="total">Puntuación: <b id="mejor-puntos">0</b></li>
+          <li>Rondas: <b id="mejor-ronda">0</b></li>
+          <li>Palabras acertadas: <b id="mejor-palabras">0</b></li>
+          <li>Precisión: <b id="mejor-precision">0</b>%</li>
+          <li>Tiempo: <b id="mejor-tiempo">0</b>s</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+</body>
 </html>
