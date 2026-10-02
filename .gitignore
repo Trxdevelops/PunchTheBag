@@ -1,0 +1,9 @@
+# Copias de seguridad del propio proyecto
+*.zip
+
+# Carpetas que no son codigo mio
+node_modules/
+
+# Basura del sistema
+.DS_Store
+Thumbs.db
