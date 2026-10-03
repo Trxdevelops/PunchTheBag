@@ -1,3 +1,17 @@
+const VIDA_MAXIMA = 100;
+const DANO_AL_BOSS = 10;
+const PUNTOS_POR_ACIERTO = 105;
+const DANO_BASE = 10;
+const DANO_MAXIMO = 35;
+const MS_POR_LETRA_BASE = 480;
+const MS_POR_LETRA_MINIMO = 180;
+const MS_TEMBLOR = 300;
+const MS_AVISO = 2000;
+const MAX_HISTORIAL = 5;
+const CLAVE_MEJOR = 'writefight-mejor';
+const CLAVE_HISTORIAL = 'writefight-historial';
+const PALABRA_SECRETA = 'oscuro';
+
 const puntosEl = document.getElementById('puntos');
 const rondaEl = document.getElementById('ronda');
 const vidaBoss = document.getElementById('vida-boss');
@@ -7,26 +21,16 @@ const sprite = document.getElementById('sprite');
 const avisoEl = document.getElementById('aviso');
 const palabraEl = document.getElementById('palabra');
 const entrada = document.getElementById('entrada');
+const esRecordEl = document.getElementById('es-record');
+const sinRecord = document.getElementById('sin-record');
+const listaMejor = document.getElementById('mejor');
+const historialEl = document.getElementById('historial');
+const sinHistorial = document.getElementById('sin-historial');
 const columnaJuego = document.querySelector('.juego');
 
 const zonaInicio = document.getElementById('zona-inicio');
 const zonaJuego = document.getElementById('zona-juego');
 const zonaDerrota = document.getElementById('zona-derrota');
-
-const finRonda = document.getElementById('fin-ronda');
-const finPalabras = document.getElementById('fin-palabras');
-const finPrecision = document.getElementById('fin-precision');
-const finTiempo = document.getElementById('fin-tiempo');
-const finPuntos = document.getElementById('fin-puntos');
-const esRecordEl = document.getElementById('es-record');
-
-const sinRecord = document.getElementById('sin-record');
-const listaMejor = document.getElementById('mejor');
-const mejorPuntos = document.getElementById('mejor-puntos');
-const mejorRonda = document.getElementById('mejor-ronda');
-const mejorPalabras = document.getElementById('mejor-palabras');
-const mejorPrecision = document.getElementById('mejor-precision');
-const mejorTiempo = document.getElementById('mejor-tiempo');
 
 const palabras = {
   facil: ['casa', 'perro', 'gato', 'sol', 'luna', 'agua', 'flor', 'mesa', 'libro', 'mano',
@@ -46,8 +50,10 @@ const palabras = {
             'automatizacion', 'especializacion', 'deforestacion', 'sostenibilidad', 'biodiversidad']
 };
 
-let vidaDelJugador = 100;
-let vidaDelBoss = 100;
+const TILDES = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u' };
+
+let vidaDelJugador = VIDA_MAXIMA;
+let vidaDelBoss = VIDA_MAXIMA;
 let puntos = 0;
 let ronda = 1;
 let acertadas = 0;
@@ -55,8 +61,32 @@ let totales = 0;
 let palabraActual = '';
 let palabraLimpia = '';
 let tiempoInicio = 0;
-let tiempoId = null;
 let partidaAcabada = false;
+
+let tiempoId = null;
+let temblorId = null;
+let avisoId = null;
+let teclasPulsadas = '';
+
+function leerGuardado(clave, porDefecto) {
+  try {
+    const guardado = localStorage.getItem(clave);
+    return guardado === null ? porDefecto : JSON.parse(guardado);
+  } catch (error) {
+    return porDefecto;
+  }
+}
+
+function escribirGuardado(clave, valor) {
+  try {
+    localStorage.setItem(clave, JSON.stringify(valor));
+  } catch (error) {
+    return;
+  }
+}
+
+let mejor = leerGuardado(CLAVE_MEJOR, null);
+let historial = leerGuardado(CLAVE_HISTORIAL, []);
 
 function nivelActual() {
   if (ronda <= 2) return 'facil';
@@ -65,22 +95,24 @@ function nivelActual() {
 }
 
 function tiempoLimite() {
-
-  const msPorLetra = Math.max(180, 480 - (ronda - 1) * 30);
+  const msPorLetra = Math.max(MS_POR_LETRA_MINIMO, MS_POR_LETRA_BASE - (ronda - 1) * 30);
   return palabraActual.length * msPorLetra;
 }
 
 function dañoQueRecibo() {
-
-  return Math.min(35, 10 + (ronda - 1) * 3);
+  return Math.min(DANO_MAXIMO, DANO_BASE + (ronda - 1) * 3);
 }
-
-const TILDES = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u' };
 
 function limpiar(texto) {
   return texto.toLowerCase().replace(/[áéíóú]/g, function (letra) {
     return TILDES[letra];
   });
+}
+
+function reiniciarAnimacion(elemento, clase) {
+  elemento.classList.remove(clase);
+  elemento.offsetWidth;
+  elemento.classList.add(clase);
 }
 
 function nuevaPalabra() {
@@ -114,8 +146,8 @@ function acierto() {
   acertadas++;
   totales++;
 
-  vidaDelBoss = Math.max(0, vidaDelBoss - 10);
-  puntos += 105;
+  vidaDelBoss = Math.max(0, vidaDelBoss - DANO_AL_BOSS);
+  puntos += PUNTOS_POR_ACIERTO;
 
   pintarBarra(vidaBoss, vidaDelBoss);
   puntosEl.textContent = puntos;
@@ -129,9 +161,9 @@ function acierto() {
 
 function bossDerrotado() {
   ronda++;
-  vidaDelBoss = 100;
+  vidaDelBoss = VIDA_MAXIMA;
 
-  pintarBarra(vidaBoss, 100);
+  pintarBarra(vidaBoss, VIDA_MAXIMA);
   rondaEl.textContent = ronda;
   mostrarAviso(`¡Boss derrotado! Ronda ${ronda}`);
 
@@ -145,7 +177,7 @@ function fallo() {
   vidaDelJugador = Math.max(0, vidaDelJugador - dañoQueRecibo());
   pintarBarra(vidaJugador, vidaDelJugador);
 
-  atacar();
+  reiniciarAnimacion(sprite, 'atacando');
   temblar();
 
   if (vidaDelJugador === 0) {
@@ -154,16 +186,6 @@ function fallo() {
     nuevaPalabra();
   }
 }
-
-function atacar() {
-  sprite.classList.remove('atacando');
-  sprite.offsetWidth;
-  sprite.classList.add('atacando');
-}
-
-sprite.addEventListener('animationend', function () {
-  sprite.classList.remove('atacando');
-});
 
 function pintarBarra(barra, valor) {
   barra.style.width = `${valor}%`;
@@ -177,28 +199,20 @@ function pintarBarra(barra, valor) {
   }
 }
 
-let temblorId = null;
-
 function temblar() {
-  columnaJuego.classList.remove('golpe');
-  columnaJuego.offsetWidth;
-  columnaJuego.classList.add('golpe');
-
+  reiniciarAnimacion(columnaJuego, 'golpe');
   clearTimeout(temblorId);
   temblorId = setTimeout(function () {
     columnaJuego.classList.remove('golpe');
-  }, 300);
+  }, MS_TEMBLOR);
 }
-
-let avisoId = null;
 
 function mostrarAviso(texto) {
   avisoEl.textContent = texto;
-
   clearTimeout(avisoId);
   avisoId = setTimeout(function () {
     avisoEl.textContent = '';
-  }, 2000);
+  }, MS_AVISO);
 }
 
 function mostrarZona(zona) {
@@ -217,6 +231,12 @@ function segundosJugados() {
   return Math.round((Date.now() - tiempoInicio) / 1000);
 }
 
+function pintarResultado(prefijo, datos) {
+  Object.entries(datos).forEach(function ([clave, valor]) {
+    document.getElementById(`${prefijo}-${clave}`).textContent = valor;
+  });
+}
+
 function finPartida() {
   partidaAcabada = true;
   clearTimeout(tiempoId);
@@ -229,31 +249,11 @@ function finPartida() {
     tiempo: segundosJugados()
   };
 
-  finRonda.textContent = resultado.ronda;
-  finPalabras.textContent = resultado.palabras;
-  finPrecision.textContent = resultado.precision;
-  finTiempo.textContent = resultado.tiempo;
-  finPuntos.textContent = resultado.puntos;
-
+  pintarResultado('fin', resultado);
   esRecordEl.textContent = comprobarRecord(resultado) ? '¡Nuevo récord!' : '';
+  anadirAlHistorial(resultado);
 
   mostrarZona(zonaDerrota);
-}
-
-const CLAVE = 'writefight-mejor';
-let mejor = JSON.parse(localStorage.getItem(CLAVE));
-
-function pintarMejor() {
-  if (!mejor) return;
-
-  sinRecord.classList.add('oculto');
-  listaMejor.classList.remove('oculto');
-
-  mejorPuntos.textContent = mejor.puntos;
-  mejorRonda.textContent = mejor.ronda;
-  mejorPalabras.textContent = mejor.palabras;
-  mejorPrecision.textContent = mejor.precision;
-  mejorTiempo.textContent = mejor.tiempo;
 }
 
 function comprobarRecord(resultado) {
@@ -262,14 +262,53 @@ function comprobarRecord(resultado) {
   }
 
   mejor = resultado;
-  localStorage.setItem(CLAVE, JSON.stringify(mejor));
+  escribirGuardado(CLAVE_MEJOR, mejor);
   pintarMejor();
   return true;
 }
 
+function pintarMejor() {
+  if (!mejor) return;
+
+  sinRecord.classList.add('oculto');
+  listaMejor.classList.remove('oculto');
+  pintarResultado('mejor', mejor);
+}
+
+function anadirAlHistorial(resultado) {
+  historial.unshift(resultado);
+  historial = historial.slice(0, MAX_HISTORIAL);
+  escribirGuardado(CLAVE_HISTORIAL, historial);
+  pintarHistorial();
+}
+
+function pintarHistorial() {
+  historialEl.textContent = '';
+
+  if (historial.length === 0) {
+    sinHistorial.classList.remove('oculto');
+    return;
+  }
+  sinHistorial.classList.add('oculto');
+
+  historial.forEach(function (partida, posicion) {
+    const fila = document.createElement('li');
+
+    const numero = document.createElement('span');
+    numero.className = 'numero';
+    numero.textContent = `${posicion + 1}`;
+
+    const detalle = document.createElement('span');
+    detalle.textContent = `${partida.puntos} pts · ronda ${partida.ronda} · ${partida.precision}%`;
+
+    fila.append(numero, detalle);
+    historialEl.append(fila);
+  });
+}
+
 function empezarPartida() {
-  vidaDelJugador = 100;
-  vidaDelBoss = 100;
+  vidaDelJugador = VIDA_MAXIMA;
+  vidaDelBoss = VIDA_MAXIMA;
   puntos = 0;
   ronda = 1;
   acertadas = 0;
@@ -277,8 +316,8 @@ function empezarPartida() {
   partidaAcabada = false;
   tiempoInicio = Date.now();
 
-  pintarBarra(vidaBoss, 100);
-  pintarBarra(vidaJugador, 100);
+  pintarBarra(vidaBoss, VIDA_MAXIMA);
+  pintarBarra(vidaJugador, VIDA_MAXIMA);
   puntosEl.textContent = 0;
   rondaEl.textContent = 1;
   avisoEl.textContent = '';
@@ -287,9 +326,18 @@ function empezarPartida() {
   nuevaPalabra();
 }
 
-entrada.addEventListener('input', function () {
+function enviarPalabra() {
   if (partidaAcabada) return;
 
+  if (limpiar(entrada.value) === palabraLimpia) {
+    acierto();
+  } else {
+    fallo();
+  }
+}
+
+entrada.addEventListener('input', function () {
+  if (partidaAcabada) return;
   if (entrada.value.length !== palabraLimpia.length) return;
 
   if (limpiar(entrada.value) === palabraLimpia) {
@@ -297,14 +345,27 @@ entrada.addEventListener('input', function () {
   }
 });
 
-document.getElementById('btn-empezar').addEventListener('click', empezarPartida);
-document.getElementById('btn-reiniciar').addEventListener('click', empezarPartida);
-
-document.addEventListener('keydown', function (evento) {
-  if (evento.key === 'F2') {
+entrada.addEventListener('keydown', function (evento) {
+  if (evento.key === 'Enter') {
     evento.preventDefault();
-    document.body.classList.toggle('claro');
+    enviarPalabra();
   }
 });
 
+document.addEventListener('keydown', function (evento) {
+  if (evento.target === entrada) return;
+  if (evento.key.length !== 1) return;
+
+  teclasPulsadas = (teclasPulsadas + evento.key.toLowerCase()).slice(-PALABRA_SECRETA.length);
+
+  if (teclasPulsadas === PALABRA_SECRETA) {
+    document.body.classList.toggle('oscuro');
+    teclasPulsadas = '';
+  }
+});
+
+document.getElementById('btn-empezar').addEventListener('click', empezarPartida);
+document.getElementById('btn-reiniciar').addEventListener('click', empezarPartida);
+
 pintarMejor();
+pintarHistorial();
