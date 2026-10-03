@@ -4,18 +4,6 @@
 }
 
 :root {
-  --fondo:  #0f1420;
-  --panel:  #18213a;
-  --acento: #ffc83d;
-  --rojo:   #ff5668;
-  --ambar:  #ffa733;
-  --verde:  #3ddc84;
-  --texto:  #e8edf7;
-  --gris:   #8b9ab5;
-  --borde:  #2a3a5c;
-}
-
-body.claro {
   --fondo:  #e9eef7;
   --panel:  #ffffff;
   --acento: #1a3d7c;
@@ -25,6 +13,18 @@ body.claro {
   --texto:  #11182a;
   --gris:   #53617d;
   --borde:  #c3cde0;
+}
+
+body.oscuro {
+  --fondo:  #0f1420;
+  --panel:  #18213a;
+  --acento: #ffc83d;
+  --rojo:   #ff5668;
+  --ambar:  #ffa733;
+  --verde:  #3ddc84;
+  --texto:  #e8edf7;
+  --gris:   #8b9ab5;
+  --borde:  #2a3a5c;
 }
 
 * {
@@ -311,4 +311,33 @@ button:hover {
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
   }
+}
+
+.titulo-historial {
+  margin-top: 1.4rem;
+}
+
+#historial {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#historial li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--borde);
+  font-size: 0.95rem;
+}
+
+#historial li:last-child {
+  border-bottom: none;
+}
+
+#historial .numero {
+  color: var(--acento);
+  font-weight: bold;
+  min-width: 1.2rem;
 }
